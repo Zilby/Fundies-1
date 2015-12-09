@@ -1,0 +1,57 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-reader.ss" "lang")((modname tmplExamples) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+#|
+(define-struct pcar [passengers front])
+
+A Train is one of 
+'locomotive ; a train engine
+(make-pcar Number Train) ; a passenger car
+Interpretation: a passenger car describes the number of passengers
+riding in that car and the rest of the train, that is, everything in *front* of that car. 
+
+Example: A train that begins with an engine, then has a passenger car with 23 passengers,
+followed a passenger car with 17 passengers, is described with :
+(define train1 (make-pcar 17 (make-pcar 23 'locomotive)))
+
+Write a template for a function that takes a train and produces a number
+
+(define (train-tmpl a-train)
+  (cond
+     [(symbol? a-train) ....]
+     [(pcar? a-train) .... (pcar-passengers a-train)
+                           .... (train-tmpl (pcar-front a-train)
+                           ....]))
+_____________________________________________________________________________
+
+You must list ALL POSSIBLE INPUTS for a template, not just the ones you're going to use. 
+
+A num is one of: 
+-integer
+- (make-fraction Integer Integer)
+(define-struct fraction [top bot])
+
+make template that takes a num and returns a boolean
+
+(define (num-templ n)
+   (cond [(integer? n) ...]
+         [(fraction? n) ...(fraction-top n) ... (fraction-bot n) ....]))
+
+________________________________________________________________________________
+
+If a template is recursive, you may need to return back in the original function.
+You also cannot do something like string=? first if the input may not be a string
+
+MCS can be
+-"no mcs"
+-(make-couple MCS String)
+
+(define-struct couple [one two])
+
+what is the template for a function that processes an MCS?
+
+(define (mcs-templ m)
+    (cond
+        [(couple? m) ... (mcs-templ (couple-one m)) ... (couple-two m)]
+        [(string=? m "no mcs") .... ]))
+|#

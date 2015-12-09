@@ -1,0 +1,19 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-reader.ss" "lang")((modname PCBallsEtc) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+(define (factorial x)
+  (cond
+    [(= 1 x) x]
+    [else (* x (factorial (- x 1)))]))
+
+(define (p x y)
+  (/ (factorial x) (factorial (- x y))))
+
+(define (c x y)
+  (/ (factorial x) (* (factorial (- x y)) (factorial y))))
+
+(define (b x y)
+  (/ (factorial (+ x (- y 1))) (* (factorial x) (factorial (- y 1)))))
+
+;(+ (c (+ 18 46) 4) (c 71 2) (* (c (+ 18 46) 2) (c 71 1)))
+;(* (c (+ 71 18) 8 ) (c (+ 71 46) 11))

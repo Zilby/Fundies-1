@@ -1,0 +1,191 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname 9Outtakes) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+
+;I'm a moron take 3
+;______________________________________________________________________________
+#|
+(define (make-possible-btns n)
+  (cond
+    [(symbol? n) (list n)]
+    [(= n 0) (list 'leaf)]
+    [(= n 1) (list (make-node 'leaf 'leaf))]
+    [else
+     (btn-helper (- n 1) (- n 1))]))
+
+(define (btn-helper n1 n2)
+  (cond
+    [(and (symbol? n1) (symbol? n2)) (make-node n1 n2)]
+    [(= n1 0) (list (make-node 'leaf n2))]
+    [(= n2 0) (list (make-node n1 'leaf))]
+    [(> n1 n2) (cons (make-node n1 n2) (btn-helper n1 (- n2 1)))]
+    [(> n2 n1) (cons (make-node n1 n2) (btn-helper (- n1 1) n2))]
+    [else (cons (make-node n1 n2) (append (btn-helper n1 (- n2 1))
+                                     (btn-helper (- n1 1) n2)))]))
+
+(define (make-possible-btn-sizes n)
+  (btn-sizes-helper (- n 1) (- n 1)))
+
+;used to get all cases of n1-1 and n2-1, uses helper functions to get the remaining cases. 
+(define (btn-sizes-helper n1 n2)
+  (cond
+    [(or (and (symbol? n1) (symbol? n2)) (and (= 0 n1) (= 0 n2))) empty]
+    [(= n1 0) (cons (make-node 'leaf n2) (btn-sizes-helper n1 (- n2 1)))]
+    [(= n2 0) (cons (make-node n1 'leaf) (btn-sizes-helper (- n1 1) n2))]
+    [(> n1 n2) (cond
+                 [(> (- n1 n2) 1) (append (btn-special-helper (- n1 1) n2) (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1))))]
+                 [else 
+                  (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1)))])]
+    [(> n2 n1) (cond
+                 [(> (- n2 n1) 1) (append (btn-special-helper n1 (- n2 1)) (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2)))]
+                 [else 
+                  (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2))])]
+    [else (cons (make-node n1 n2) (append (btn-sizes-helper n1 (- n2 1))
+                                     (btn-sizes-helper (- n1 1) n2)
+                                     (btn-doubles-helper (- n1 1) (- n2 1))))]))
+
+;used to get cases where n1 is equal to n2 including when both are leaves
+(define (btn-doubles-helper n1 n2)
+  (cond
+    [(and (= n1 0) (= n2 0)) (list (make-node 'leaf 'leaf))]
+    [else (cons (make-node n1 n2) (btn-doubles-helper (- n1 1) (- n2 1)))]))
+
+;used to get cases where the difference between the original n1 and the modified n2 is greater than 1
+(define (btn-special-helper n1 n2)
+  (cond
+    [(> n1 n2) (cons (make-node n1 n2) (btn-special-helper (- n1 1) n2))]
+    [(< n1 n2) (cons (make-node n1 n2) (btn-special-helper n1 (- n2 1)))]
+    [(= n1 n2) empty]))
+
+(make-possible-btns 4)
+(make-possible-btn-sizes 3)
+ 
+(define (make-reality n)
+  (map make-reality (make-possible-btn-sizes (node-left n)))
+  (map make-reality (make-possible-btn-sizes (node-right n))))
+|#
+
+
+;I'm a moron take 2
+;__________________________________________________________________________
+#|
+(define (make-btn n)
+  (cond
+    [(symbol? n) (list n)]
+    [(= n 0) (list 'leaf)]
+    [(= n 1) (list (make-node 'leaf 'leaf))]
+    [else (get-btns-from-possibilities (map (lambda (x) (make-node (make-btn (node-left x)) (make-btn (node-right x))))
+               (make-possible-btn-sizes n)))]))
+
+(define (get-btns-from-possibilities p)
+  (cond
+    [(empty? p) p]
+    [(node? p) p]
+    [(= 1 (length p)) p]
+    [else (cons (make-node (get-btns-from-possibilities (node-left (first p)))(get-btns-from-possibilities (node-right (first p))))
+                (get-btns-from-possibilities (rest p)))]))
+
+;makes a list of lists of all possible btn sizes. 
+(define (make-possible-btn-sizes n)
+  (cond
+    [(symbol? n) (list n)]
+    [(= n 1) (list (make-node 'leaf 'leaf))]
+    [else
+     (btn-sizes-helper (- n 1) (- n 1))]))
+
+(define (btn-sizes-helper n1 n2)
+  (cond
+    [(and (symbol? n1) (symbol? n2)) (make-node n1 n2)]
+    [(= n1 0) (list (make-node 'leaf n2))]
+    [(= n2 0) (list (make-node n1 'leaf))]
+    [(> n1 n2) (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1)))]
+    [(> n2 n1) (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2))]
+    [else (cons (make-node n1 n2) (append (btn-sizes-helper n1 (- n2 1))
+                                     (btn-sizes-helper (- n1 1) n2)))]))
+
+;(check-expect(make-possible-btn-sizes 'leaf)(list 'leaf))
+;(check-expect(make-possible-btn-sizes 1)(list (make-node 'leaf 'leaf)))
+;(check-expect(make-possible-btn-sizes 2)(list (make-node 1 1) (make-node 1 'leaf)
+;                                              (make-node 'leaf 1)))
+;(check-expect(make-possible-btn-sizes 3)(list (make-node 2 2) (make-node 2 1)
+;                                              (make-node 2 'leaf) (make-node 1 2)
+;                                              (make-node 'leaf 2)))
+;(check-expect(make-possible-btn-sizes 4)(list (make-node 3 3) (make-node 3 2)
+;                                              (make-node 3 1) (make-node 3 'leaf)
+;                                              (make-node 2 3) (make-node 1 3)
+;                                              (make-node 'leaf 3)))
+;(check-expect(make-possible-btn-sizes 5)(list (make-node 4 4) (make-node 4 3)
+;                                              (make-node 4 2) (make-node 4 1)
+;                                              (make-node 4 'leaf) (make-node 3 4)
+;                                              (make-node 2 4) (make-node 1 4)
+;                                              (make-node 'leaf 4)))
+;(make-btn 1)
+;(make-btn 2)
+(make-possible-btn-sizes 3)
+(make-btn 3)
+|#
+
+;I'm a moron
+;_____________________________________________________________________________________________
+;used to get all cases of n1-1 and n2-1, uses helper functions to get the remaining cases. 
+#|(define (btn-sizes-helper n1 n2)
+  (cond
+    [(and (= n1 0) (= n2 0)) empty]
+    [(= n1 0) (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1)))]
+    [(= n2 0) (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2))]
+    [(> n1 n2) (cond
+                 [(> (- n1 n2) 1) (append (btn-special-helper (- n1 1) n2) (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1))))]
+                 [else 
+                  (cons (make-node n1 n2) (btn-sizes-helper n1 (- n2 1)))])]
+    [(> n2 n1) (cond
+                 [(> (- n2 n1) 1) (append (btn-special-helper n1 (- n2 1)) (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2)))]
+                 [else 
+                  (cons (make-node n1 n2) (btn-sizes-helper (- n1 1) n2))])]
+    [else (cons (make-node n1 n2) (append (btn-sizes-helper n1 (- n2 1))
+                                     (btn-sizes-helper (- n1 1) n2)
+                                     (btn-doubles-helper (- n1 1) (- n2 1))))]))
+
+;used to get cases where n1 is equal to n2 
+(define (btn-doubles-helper n1 n2)
+  (cond
+    [(and (= n1 0) (= n2 0)) (list (make-node 0 0))]
+    [else (cons (make-node n1 n2) (btn-doubles-helper (- n1 1) (- n2 1)))]))
+
+;used to get cases where the difference between the original n1 and the modified n2 is greater than 1
+(define (btn-special-helper n1 n2)
+  (cond
+    [(> n1 n2) (cons (make-node n1 n2) (btn-special-helper (- n1 1) n2))]
+    [(< n1 n2) (cons (make-node n1 n2) (btn-special-helper n1 (- n2 1)))]
+    [(= n1 n2) empty]))
+
+(check-expect (make-possible-btn-sizes 5)
+              (list
+               (make-node 4 4)
+               (make-node 4 3)
+               (make-node 3 2)
+               (make-node 4 2)
+               (make-node 3 1)
+               (make-node 2 1)
+               (make-node 4 1)
+               (make-node 4 0)
+               (make-node 3 0)
+               (make-node 2 0)
+               (make-node 1 0)
+               (make-node 3 4)
+               (make-node 2 3)
+               (make-node 2 4)
+               (make-node 1 3)
+               (make-node 1 2)
+               (make-node 1 4)
+               (make-node 0 4)
+               (make-node 0 3)
+               (make-node 0 2)
+               (make-node 0 1)
+               (make-node 3 3)
+               (make-node 2 2)
+               (make-node 1 1)
+               (make-node 0 0)))|#
+
+;(make-possible-btn-sizes 0)
+;(make-possible-btn-sizes 1)
+;(make-possible-btn-sizes 2)
